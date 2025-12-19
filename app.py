@@ -12,6 +12,8 @@ def home():
 
 @app.route("/analyze", methods=["POST"])
 def analyze_page():
+   @app.route("/analyze", methods=["POST"])
+def analyze_page():
     data = request.get_json() or {}
     url = data.get("url")
 
@@ -30,15 +32,15 @@ You are a Search Quality Rater assistant.
 Analyze the webpage at this URL:
 {url}
 
-Give answers in JSON format with these keys:
-- purpose
-- ymyl
-- reputation
-- mc_quality
-- eeat
-- overall_pq
-
-Follow Google Search Quality Rater Guidelines.
+Respond ONLY in valid JSON with this exact structure:
+{{
+  "purpose": "...",
+  "ymyl": "...",
+  "reputation": "...",
+  "mc_quality": "...",
+  "eeat": "...",
+  "overall_pq": "..."
+}}
 """
 
     response = client.chat.completions.create(
@@ -47,6 +49,15 @@ Follow Google Search Quality Rater Guidelines.
         temperature=0.2
     )
 
-    return jsonify({
-        "result": response.choices[0].message.content
-    })
+    import json
+    ai_text = response.choices[0].message.content
+
+    try:
+        parsed = json.loads(ai_text)
+        return jsonify(parsed)
+    except Exception:
+        return jsonify({
+            "error": "AI returned invalid JSON",
+            "raw": ai_text
+        })
+ 
