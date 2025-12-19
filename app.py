@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
+import json
 from openai import OpenAI
 
 app = Flask(__name__)
@@ -11,8 +12,6 @@ def home():
     return "AI Page Quality Backend is running"
 
 @app.route("/analyze", methods=["POST"])
-def analyze_page():
-   @app.route("/analyze", methods=["POST"])
 def analyze_page():
     data = request.get_json() or {}
     url = data.get("url")
@@ -49,8 +48,7 @@ Respond ONLY in valid JSON with this exact structure:
         temperature=0.2
     )
 
-    import json
-    ai_text = response.choices[0].message.content
+    ai_text = response.choices[0].message.content.strip()
 
     try:
         parsed = json.loads(ai_text)
@@ -60,4 +58,3 @@ Respond ONLY in valid JSON with this exact structure:
             "error": "AI returned invalid JSON",
             "raw": ai_text
         })
- 
