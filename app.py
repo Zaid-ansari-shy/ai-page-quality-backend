@@ -4,10 +4,9 @@ from openai import OpenAI
 
 app = Flask(__name__)
 
-# Read API key securely from environment variable
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-@app.route("/", methods=["GET"])
+@app.route("/")
 def home():
     return "AI Page Quality Backend is running"
 
@@ -48,5 +47,4 @@ Give clear, structured answers.
     })
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
-
+    app.run()
