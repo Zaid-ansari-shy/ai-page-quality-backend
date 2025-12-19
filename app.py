@@ -12,7 +12,7 @@ def home():
 
 @app.route("/analyze", methods=["POST"])
 def analyze_page():
-    data = request.get_json()
+    data = request.get_json() or {}
     url = data.get("url")
 
     if not url:
@@ -46,5 +46,4 @@ Give clear, structured answers.
         "analysis": response.choices[0].message.content
     })
 
-if __name__ == "__main__":
-    app.run()
+# ❗ DO NOT run app.run() on Render
