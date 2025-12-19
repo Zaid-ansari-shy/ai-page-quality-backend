@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import os
+from openai import OpenAI
 
 app = Flask(__name__)
-CORS(app)  # ✅ ALLOW frontend requests
+CORS(app)
 
 @app.route("/")
 def home():
@@ -16,7 +18,35 @@ def analyze_page():
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return jsonify({"error": "OPENAI_API_KEY not set"}), 500
+
+    client = OpenAI(api_key=api_key)
+
+    prompt = f"""
+You are a Search Quality Rater assistant.
+
+Analyze the webpage at this URL:
+{url}
+
+Give answers in JSON format with these keys:
+- purpose
+- ymyl
+- reputation
+- mc_quality
+- eeat
+- overall_pq
+
+Follow Google Search Quality Rater Guidelines.
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2
+    )
+
     return jsonify({
-        "status": "Backend connected successfully",
-        "url_received": url
+        "result": response.choices[0].message.content
     })
