@@ -1,10 +1,8 @@
 from flask import Flask, request, jsonify
-import os
-from openai import OpenAI
+from flask_cors import CORS
 
 app = Flask(__name__)
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+CORS(app)  # ✅ ALLOW frontend requests
 
 @app.route("/")
 def home():
@@ -18,32 +16,7 @@ def analyze_page():
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
-    prompt = f"""
-You are a Search Quality Rater assistant.
-
-Analyze the webpage at this URL:
-{url}
-
-Answer these Page Quality questions:
-1. True purpose of the page
-2. Harmful or deceptive (Yes/No/Maybe)
-3. YMYL classification and category
-4. Reputation of responsible parties
-5. Main content quality
-6. E-E-A-T evaluation
-7. Overall Page Quality rating (Lowest to Highest)
-
-Give clear, structured answers.
-"""
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3
-    )
-
     return jsonify({
-        "analysis": response.choices[0].message.content
+        "status": "Backend connected successfully",
+        "url_received": url
     })
-
-# ❗ DO NOT run app.run() on Render
