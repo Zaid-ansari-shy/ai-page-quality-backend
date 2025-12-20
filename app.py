@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
+import requests
 import json
-from openai import OpenAI
 
 app = Flask(__name__)
 CORS(app)
@@ -19,11 +19,15 @@ def analyze_page():
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        return jsonify({"error": "OPENAI_API_KEY not set"}), 500
+    hf_key = os.getenv("HF_API_KEY")
+    if not hf_key:
+        return jsonify({"error": "HF_API_KEY not set"}), 500
 
-    client = OpenAI(api_key=api_key)
+    API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
+    headers = {
+        "Authorization": f"Bearer {hf_key}",
+        "Content-Type": "application/json"
+    }
 
     prompt = f"""
 You are a Search Quality Rater assistant.
@@ -31,7 +35,7 @@ You are a Search Quality Rater assistant.
 Analyze the webpage at this URL:
 {url}
 
-Respond ONLY in valid JSON with this exact structure:
+Respond ONLY in valid JSON:
 {{
   "purpose": "...",
   "ymyl": "...",
@@ -42,19 +46,29 @@ Respond ONLY in valid JSON with this exact structure:
 }}
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2
-    )
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 500,
+            "temperature": 0.2
+        }
+    }
 
-    ai_text = response.choices[0].message.content.strip()
+    response = requests.post(API_URL, headers=headers, json=payload)
+
+    if response.status_code != 200:
+        return jsonify({
+            "error": "Hugging Face API error",
+            "details": response.text
+        }), 500
+
+    output_text = response.json()[0]["generated_text"]
 
     try:
-        parsed = json.loads(ai_text)
+        parsed = json.loads(output_text)
         return jsonify(parsed)
     except Exception:
         return jsonify({
-            "error": "AI returned invalid JSON",
-            "raw": ai_text
+            "error": "Model did not return valid JSON",
+            "raw": output_text
         })
