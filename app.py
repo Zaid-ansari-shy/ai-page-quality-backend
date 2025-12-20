@@ -48,12 +48,12 @@ Respond ONLY in valid JSON:
 """
 
     payload = {
-        "model": "llama3-8b-8192",
+        "model": "llama-3.1-8b-instant",
         "messages": [
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.2,
-        "max_tokens": 600
+        "max_tokens": 700
     }
 
     response = requests.post(API_URL, headers=headers, json=payload)
