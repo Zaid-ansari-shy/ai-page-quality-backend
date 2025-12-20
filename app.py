@@ -23,8 +23,10 @@ def analyze_page():
     if not hf_key:
         return jsonify({"error": "HF_API_KEY not set"}), 500
 
+    # ✅ UPDATED Hugging Face Router API (IMPORTANT)
     API_URL = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.2"
- headers = {
+
+    headers = {
         "Authorization": f"Bearer {hf_key}",
         "Content-Type": "application/json"
     }
