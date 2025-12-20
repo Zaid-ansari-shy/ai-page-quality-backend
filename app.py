@@ -19,15 +19,14 @@ def analyze_page():
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
-    hf_key = os.getenv("HF_API_KEY")
-    if not hf_key:
-        return jsonify({"error": "HF_API_KEY not set"}), 500
+    groq_key = os.getenv("GROQ_API_KEY")
+    if not groq_key:
+        return jsonify({"error": "GROQ_API_KEY not set"}), 500
 
-    # ✅ WORKING FREE MODEL
-    API_URL = "https://router.huggingface.co/hf-inference/models/HuggingFaceH4/zephyr-7b-beta"
+    API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
     headers = {
-        "Authorization": f"Bearer {hf_key}",
+        "Authorization": f"Bearer {groq_key}",
         "Content-Type": "application/json"
     }
 
@@ -49,28 +48,29 @@ Respond ONLY in valid JSON:
 """
 
     payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 400,
-            "temperature": 0.2
-        }
+        "model": "llama3-8b-8192",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.2,
+        "max_tokens": 600
     }
 
     response = requests.post(API_URL, headers=headers, json=payload)
 
     if response.status_code != 200:
         return jsonify({
-            "error": "Hugging Face API error",
+            "error": "Groq API error",
             "details": response.text
         }), 500
 
-    output_text = response.json()[0]["generated_text"]
+    ai_text = response.json()["choices"][0]["message"]["content"]
 
     try:
-        parsed = json.loads(output_text)
+        parsed = json.loads(ai_text)
         return jsonify(parsed)
     except Exception:
         return jsonify({
-            "error": "Model did not return valid JSON",
-            "raw": output_text
+            "error": "AI returned invalid JSON",
+            "raw": ai_text
         })
